@@ -159,6 +159,7 @@ export const collectivePageQuery = gql`
         startsAt
         endsAt
         backgroundImageUrl(height: 208)
+        settings
         contributors(limit: $nbContributorsPerContributeCard, roles: [BACKER, ATTENDEE]) {
           id
           image
@@ -186,6 +187,7 @@ export const collectivePageQuery = gql`
         isActive
         isArchived
         backgroundImageUrl(height: 208)
+        settings
         contributors(limit: $nbContributorsPerContributeCard, roles: [BACKER]) {
           id
           name

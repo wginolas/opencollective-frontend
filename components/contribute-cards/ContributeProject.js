@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { truncate } from 'lodash';
+import { get, truncate } from 'lodash';
 
 import { ContributionTypes } from '../../lib/constants/contribution-types';
 
@@ -21,6 +21,7 @@ const ContributeProject = ({ collective, project, ...props }) => {
       contributors={project.contributors}
       stats={project.stats.backers}
       image={project.backgroundImageUrl}
+      color={get(collective, 'settings.collectivePage.primaryColor')}
       title={
         <StyledLink as={Link} color="black.800" href={`/${collective.slug}/projects/${project.slug}`}>
           {project.name}
@@ -40,6 +41,7 @@ ContributeProject.propTypes = {
     slug: PropTypes.string.isRequired,
     description: PropTypes.string,
     backgroundImageUrl: PropTypes.string,
+    settings: PropTypes.object,
     contributors: PropTypes.arrayOf(PropTypes.object),
     stats: PropTypes.shape({
       backers: PropTypes.object,
