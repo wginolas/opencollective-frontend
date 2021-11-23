@@ -4,9 +4,9 @@ import { defineMessages, FormattedMessage, injectIntl } from 'react-intl';
 import styled, { css } from 'styled-components';
 
 import { ContributionTypes } from '../../lib/constants/contribution-types';
+import { adjustLuminance } from '../../lib/theme';
 
 import { ContributorAvatar } from '../Avatar';
-import { getTheme } from '../CollectiveThemeProvider';
 import Container from '../Container';
 import { Box, Flex } from '../Grid';
 import Link from '../Link';
@@ -34,8 +34,7 @@ const StyledContributeCard = styled.div`
 
   &:hover {
     /* Primitives / OC Blue */
-    border: 1px solid
-      ${props => (props.customPrimaryColor ? props.customPrimaryColor[600] : props.theme.colors.primary[600])};
+    border: 1px solid ${props => props.theme.colors.primary[600]};
 
     /* Drop Shadow / Z 300 */
     box-shadow: 0px 8px 12px rgba(20, 20, 20, 0.16);
@@ -52,9 +51,23 @@ const CoverImage = styled.div`
   border-radius: 16px 16px 0 0;
 
   ${props => {
-    const primary = props.customPrimaryColor || props.theme.colors.primary;
-    const radial = `radial-gradient(circle, ${primary[300]} 0%, ${primary[800]} 100%), `;
     const image = props.image ? `url(${props.image}), ` : '';
+
+    if (props.customPrimaryColor) {
+      const primary = props.customPrimaryColor;
+      const radial = `radial-gradient(circle, ${adjustLuminance(primary, 0.65)} 0%, ${adjustLuminance(
+        primary,
+        0.2,
+      )} 100%), `;
+      return css`
+        background: ${image} ${radial} ${props.customPrimaryColor};
+        ${props.isDisabled && `filter: grayscale(0.75);`}
+      `;
+    }
+
+    const primary = props.theme.colors.primary;
+    const radial = `radial-gradient(circle, ${primary[300]} 0%, ${primary[800]} 100%), `;
+
     return css`
       background: ${image} ${radial} ${primary[500]};
       ${props.isDisabled && `filter: grayscale(0.75);`}
@@ -74,17 +87,6 @@ const Description = styled.div`
 
   /* Neutral Tints / 700 */
   color: #4e5052;
-`;
-
-/** Tier card CTA button */
-const CTAButton = styled(StyledButton)`
-  ${props => {
-    return css`
-      &:hover {
-        background: ${props.hoverStyles?.background};
-      }
-    `;
-  }};
 `;
 
 /** Translations */
@@ -198,12 +200,10 @@ const ContributeCard = ({
   ...props
 }) => {
   const totalContributors = (stats && stats.all) || (contributors && contributors.length) || 0;
-  const customTheme = color && getTheme(color);
-  const customPrimaryColor = customTheme && customTheme.colors.primary;
 
   return (
-    <StyledContributeCard customPrimaryColor={customPrimaryColor} {...props}>
-      <CoverImage customPrimaryColor={customPrimaryColor} image={image} isDisabled={disableCTA}>
+    <StyledContributeCard {...props}>
+      <CoverImage customPrimaryColor={color} image={image} isDisabled={disableCTA}>
         <StyledTag
           position="absolute"
           bottom="8px"
@@ -228,18 +228,9 @@ const ContributeCard = ({
         <Box>
           {!disableCTA && (
             <Link href={route}>
-              <CTAButton
-                background={customTheme && customTheme.buttons.primary.background}
-                border={customTheme && customTheme.buttons.primary.borderColor}
-                hoverStyles={customTheme && customTheme.buttons.primary['&:hover']}
-                buttonStyle={getCTAButtonStyle(type)}
-                width={1}
-                mb={2}
-                mt={3}
-                data-cy="contribute-btn"
-              >
+              <StyledButton buttonStyle={getCTAButtonStyle(type)} width={1} mb={2} mt={3} data-cy="contribute-btn">
                 {buttonText || getContributeCTA(type)}
-              </CTAButton>
+              </StyledButton>
             </Link>
           )}
           {!hideContributors && (
