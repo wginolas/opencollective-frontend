@@ -64,6 +64,7 @@ const updateOrderMutation = gqlV2/* GraphQL */ `
   }
 `;
 
+// TODO: Make sure this query works with organizations
 const tiersQuery = gqlV2/* GraphQL */ `
   query UpdateOrderPopUpTiers($slug: String!) {
     account(slug: $slug) {

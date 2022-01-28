@@ -21,6 +21,7 @@ const AdminContributeCardsContainer = ({
   onContributionCardMove,
   onContributionCardDrop,
   onMount,
+  CardsContainer,
 }) => {
   const isEvent = collective.type === CollectiveType.EVENT;
   const createContributionTierRoute = isEvent
@@ -35,7 +36,7 @@ const AdminContributeCardsContainer = ({
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <ContributeCardsContainer>
+      <CardsContainer>
         {cards.map(({ key, Component, componentProps }, index) => (
           <ContributeCardContainer key={key}>
             {cards.length === 1 ? (
@@ -56,7 +57,7 @@ const AdminContributeCardsContainer = ({
             <FormattedMessage id="Contribute.CreateTier" defaultMessage="Create Contribution Tier" />
           </CreateNew>
         </ContributeCardContainer>
-      </ContributeCardsContainer>
+      </CardsContainer>
     </DndProvider>
   );
 };
@@ -77,6 +78,11 @@ AdminContributeCardsContainer.propTypes = {
   onContributionCardMove: PropTypes.func.isRequired,
   onContributionCardDrop: PropTypes.func.isRequired,
   onMount: PropTypes.func,
+  CardsContainer: PropTypes.node,
+};
+
+AdminContributeCardsContainer.defaultProps = {
+  CardsContainer: ContributeCardsContainer,
 };
 
 export default AdminContributeCardsContainer;

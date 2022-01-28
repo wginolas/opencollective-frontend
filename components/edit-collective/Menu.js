@@ -28,6 +28,7 @@ export const EDIT_COLLECTIVE_SECTIONS = {
   PAYMENT_RECEIPTS: 'payment-receipts',
   TICKETS: 'tickets',
   TIERS: 'tiers',
+  TIERS_REVAMP: 'tiers-revamp',
   GIFT_CARDS: 'gift-cards',
   WEBHOOKS: 'webhooks',
   PENDING_ORDERS: 'pending-orders',
