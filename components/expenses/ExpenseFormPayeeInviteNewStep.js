@@ -2,7 +2,7 @@ import React, { Fragment } from 'react';
 import PropTypes from 'prop-types';
 import themeGet from '@styled-system/theme-get';
 import { FastField, Field } from 'formik';
-import { omit } from 'lodash';
+import { isEmpty, omit } from 'lodash';
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 import styled from 'styled-components';
 import { isEmail } from 'validator';
@@ -10,7 +10,8 @@ import { isEmail } from 'validator';
 import { suggestSlug } from '../../lib/collective.lib';
 import { EMPTY_ARRAY } from '../../lib/constants/utils';
 import { ERROR, isErrorType } from '../../lib/errors';
-import { formatFormErrorMessage } from '../../lib/form-utils';
+import { formatFormErrorMessage, requireFields } from '../../lib/form-utils';
+import { reportValidityHTML5 } from '../../lib/utils';
 
 import { Box, Flex, Grid } from '../Grid';
 import I18nAddressFields from '../I18nAddressFields';
@@ -21,6 +22,7 @@ import StyledCard from '../StyledCard';
 import StyledHr from '../StyledHr';
 import StyledInput from '../StyledInput';
 import StyledInputField from '../StyledInputField';
+import StyledInputFormikField from '../StyledInputFormikField';
 import StyledInputGroup from '../StyledInputGroup';
 import StyledLinkButton from '../StyledLinkButton';
 import StyledTextarea from '../StyledTextarea';
@@ -124,14 +126,17 @@ const RadioOptionContainer = styled.label`
   }
 `;
 
+export const validateExpenseFormPayeeInviteNewStep = values => {
+  const errors = requireFields(values, ['payee.name', 'payee.email']);
+  return errors;
+};
+
 const ExpenseFormPayeeInviteNewStep = ({ formik, collective, onBack, onNext }) => {
   const intl = useIntl();
   const { formatMessage } = intl;
   const { values, touched, errors } = formik;
   const isValidEmail = values.payee?.email && isEmail(values.payee.email);
   const stepOneCompleted = values.payee?.name && isValidEmail;
-  const emailError = !isValidEmail ? intl.formatMessage({ defaultMessage: 'Please enter a valid email' }) : null;
-
   const setPayoutMethod = React.useCallback(({ value }) => formik.setFieldValue('payoutMethod', value), []);
   const [payeeType, setPayeeType] = React.useState(PAYEE_TYPE.USER);
   const [showAdditionalInfo, setAdditionalInfo] = React.useState(false);
@@ -144,6 +149,7 @@ const ExpenseFormPayeeInviteNewStep = ({ formik, collective, onBack, onNext }) =
       }
     }
   }, [values.payee?.organization?.name]);
+
   React.useEffect(() => {
     if (payeeType === PAYEE_TYPE.USER) {
       formik.setFieldValue('payee', omit(values.payee, ['organization']));
@@ -157,9 +163,6 @@ const ExpenseFormPayeeInviteNewStep = ({ formik, collective, onBack, onNext }) =
 
   return (
     <Fragment>
-      <P fontSize="11px" color="black.600">
-        <FormattedMessage id="form.requiredFields" defaultMessage="Fields marked with (*) are mandatory." />
-      </P>
       <StyledInputField label={formatMessage(msg.accountType)} labelFontSize="13px" mt={3}>
         <StyledCard>
           <Fieldset onChange={changePayeeType}>
@@ -226,7 +229,7 @@ const ExpenseFormPayeeInviteNewStep = ({ formik, collective, onBack, onNext }) =
                   labelFontSize="13px"
                   mt={3}
                 >
-                  {inputProps => <StyledInputGroup {...inputProps} {...field} prepend="http://" />}
+                  {inputProps => <StyledInputGroup {...inputProps} {...field} prepend="https://" />}
                 </StyledInputField>
               )}
             </Field>
@@ -253,37 +256,28 @@ const ExpenseFormPayeeInviteNewStep = ({ formik, collective, onBack, onNext }) =
         gridAutoFlow="dense"
       >
         <Box>
-          <Field name="payee.name">
-            {({ field }) => (
-              <StyledInputField
-                name={field.name}
-                label={formatMessage(msg.nameLabel)}
-                labelFontSize="13px"
-                mt={3}
-                hideOptionalLabel
-                required
-              >
-                {inputProps => <StyledInput {...inputProps} {...field} />}
-              </StyledInputField>
-            )}
-          </Field>
+          <StyledInputFormikField
+            name="payee.name"
+            htmlFor="payee.name"
+            required
+            label={formatMessage(msg.nameLabel)}
+            labelFontSize="13px"
+            mt={3}
+          >
+            {({ field }) => <StyledInput {...field} />}
+          </StyledInputFormikField>
         </Box>
         <Box>
-          <Field name="payee.email" required>
-            {({ field }) => (
-              <StyledInputField
-                name={field.name}
-                label={formatMessage(msg.emailTitle)}
-                labelFontSize="13px"
-                error={formik.touched.payee?.email && (errors.payee?.email || emailError)}
-                mt={3}
-                hideOptionalLabel
-                required
-              >
-                {inputProps => <StyledInput {...inputProps} {...field} type="email" />}
-              </StyledInputField>
-            )}
-          </Field>
+          <StyledInputFormikField
+            name="payee.email"
+            htmlFor="payee.email"
+            label={formatMessage(msg.emailTitle)}
+            required
+            labelFontSize="13px"
+            mt={3}
+          >
+            {({ field }) => <StyledInput {...field} type="email" />}
+          </StyledInputFormikField>
         </Box>
 
         {!showAdditionalInfo ? (
@@ -307,7 +301,7 @@ const ExpenseFormPayeeInviteNewStep = ({ formik, collective, onBack, onNext }) =
                     label={formatMessage(msg.country)}
                     labelFontSize="13px"
                     error={formatFormErrorMessage(intl, errors.payeeLocation?.country)}
-                    required
+                    required={false}
                     mt={3}
                   >
                     {({ id, error }) => (
@@ -341,6 +335,7 @@ const ExpenseFormPayeeInviteNewStep = ({ formik, collective, onBack, onNext }) =
                     htmlFor="payout-method"
                     flex="1"
                     mt={3}
+                    required={false}
                     label={formatMessage(msg.payoutOptionLabel)}
                     labelFontSize="13px"
                     error={
@@ -389,7 +384,6 @@ const ExpenseFormPayeeInviteNewStep = ({ formik, collective, onBack, onNext }) =
                   required={false}
                   mt={3}
                   gridColumn={1}
-                  hideOptionalLabel
                 >
                   {inputProps => (
                     <Field
@@ -414,7 +408,6 @@ const ExpenseFormPayeeInviteNewStep = ({ formik, collective, onBack, onNext }) =
               label={formatMessage(msg.recipientNoteLabel)}
               labelFontSize="13px"
               required={false}
-              hideOptionalLabel
               mt={3}
             >
               {inputProps => <Field as={StyledTextarea} {...inputProps} {...field} minHeight={80} />}
@@ -452,9 +445,14 @@ const ExpenseFormPayeeInviteNewStep = ({ formik, collective, onBack, onNext }) =
               whiteSpace="nowrap"
               data-cy="expense-next"
               buttonStyle="primary"
-              disabled={!stepOneCompleted}
-              onClick={async () => {
-                onNext?.();
+              onClick={e => {
+                const isFormValid = reportValidityHTML5(e.target.form);
+                const errors = validateExpenseFormPayeeInviteNewStep(values);
+                if (!isEmpty(errors)) {
+                  formik.setErrors(errors);
+                } else if (isFormValid) {
+                  onNext();
+                }
               }}
             >
               <FormattedMessage id="Pagination.Next" defaultMessage="Next" />
