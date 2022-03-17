@@ -271,6 +271,10 @@ const ExpenseFormBody = ({
     else if (!isOnBehalf && (isDraft || !values.payee) && loggedInAccount && !isEmpty(payoutProfiles)) {
       formik.setFieldValue('payee', first(payoutProfiles));
     }
+    // If recurring expense with selected Payout Method
+    if (isDraft && loggedInAccount && !values.payoutMethod && expense.payoutMethod) {
+      formik.setFieldValue('payoutMethod', expense.payoutMethod);
+    }
   }, [payoutProfiles, loggedInAccount]);
 
   // Pre-fill address based on the payout profile
@@ -304,7 +308,7 @@ const ExpenseFormBody = ({
 
   // Load values from localstorage
   React.useEffect(() => {
-    if (shouldLoadValuesFromPersister && formPersister && !dirty) {
+    if (shouldLoadValuesFromPersister && formPersister && !dirty && !isDraft) {
       const formValues = formPersister.loadValues();
       if (formValues) {
         // Reset payoutMethod if host is no longer connected to TransferWise
@@ -685,6 +689,7 @@ ExpenseFormBody.propTypes = {
     status: PropTypes.string,
     payee: PropTypes.object,
     draft: PropTypes.object,
+    payoutMethod: PropTypes.object,
     items: PropTypes.arrayOf(
       PropTypes.shape({
         url: PropTypes.string,
@@ -801,6 +806,7 @@ ExpenseForm.propTypes = {
     status: PropTypes.string,
     payee: PropTypes.object,
     draft: PropTypes.object,
+    payoutMethod: PropTypes.object,
     items: PropTypes.arrayOf(
       PropTypes.shape({
         url: PropTypes.string,
