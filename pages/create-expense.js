@@ -24,6 +24,7 @@ import CreateExpenseDismissibleIntro from '../components/expenses/CreateExpenseD
 import ExpenseForm, { prepareExpenseForSubmit } from '../components/expenses/ExpenseForm';
 import ExpenseInfoSidebar from '../components/expenses/ExpenseInfoSidebar';
 import ExpenseNotesForm from '../components/expenses/ExpenseNotesForm';
+import ExpenseRecurringForm from '../components/expenses/ExpenseRecurringForm';
 import ExpenseSummary from '../components/expenses/ExpenseSummary';
 import {
   expensePageExpenseFieldsFragment,
@@ -118,6 +119,7 @@ class CreateExpensePage extends React.Component {
       isSubmitting: false,
       formPersister: null,
       isInitialForm: true,
+      recurring: null,
     };
   }
 
@@ -243,11 +245,12 @@ class CreateExpensePage extends React.Component {
   onSummarySubmit = async () => {
     try {
       this.setState({ isSubmitting: true, error: null });
-      const { expense } = this.state;
+      const { expense, recurring } = this.state;
       const result = await this.props.createExpense({
         variables: {
           account: { id: this.props.data.account.id },
           expense: prepareExpenseForSubmit(expense),
+          recurring,
         },
       });
 
@@ -379,6 +382,10 @@ class CreateExpensePage extends React.Component {
                                 createdByAccount: this.props.data.loggedInAccount,
                               }}
                               collective={collective}
+                            />
+                            <ExpenseRecurringForm
+                              recurring={this.state.recurring}
+                              onChange={recurring => this.setState({ recurring })}
                             />
                             <Box mt={24}>
                               <ExpenseNotesForm
@@ -539,8 +546,12 @@ const addCreateExpensePageData = graphql(createExpensePageQuery, {
 });
 
 const createExpenseMutation = gqlV2/* GraphQL */ `
-  mutation CreateExpense($expense: ExpenseCreateInput!, $account: AccountReferenceInput!) {
-    createExpense(expense: $expense, account: $account) {
+  mutation CreateExpense(
+    $expense: ExpenseCreateInput!
+    $account: AccountReferenceInput!
+    $recurring: RecurringExpenseInput
+  ) {
+    createExpense(expense: $expense, account: $account, recurring: $recurring) {
       ...ExpensePageExpenseFields
     }
   }

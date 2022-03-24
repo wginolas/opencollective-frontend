@@ -140,7 +140,10 @@ const ExpenseSummary = ({
                 <FormattedMessage
                   id="Expense.SubmittedByOnDate"
                   defaultMessage="Submitted by {name} on {date, date, long}"
-                  values={{ name: <CreatedByUserLink account={createdByAccount} />, date: new Date(expense.createdAt) }}
+                  values={{
+                    name: <CreatedByUserLink account={createdByAccount} />,
+                    date: new Date(expense.createdAt),
+                  }}
                 />
               ) : (
                 <FormattedMessage
