@@ -37,6 +37,10 @@ import StyledCheckbox from '../components/StyledCheckbox';
 import StyledHr from '../components/StyledHr';
 import { H1 } from '../components/Text';
 import { getDefaultKinds, parseTransactionKinds } from '../components/transactions/filters/TransactionsKindFilter';
+import {
+  getDefaultPaymentMethods,
+  parseTransactionPaymentMethods,
+} from '../components/transactions/filters/TransactionsPaymentMethodFilter';
 import { transactionsQueryCollectionFragment } from '../components/transactions/graphql/fragments';
 import TransactionsDownloadCSV from '../components/transactions/TransactionsDownloadCSV';
 import TransactionsFilters from '../components/transactions/TransactionsFilters';
@@ -49,6 +53,7 @@ const transactionsPageQuery = gqlV2/* GraphQL */ `
     $limit: Int!
     $offset: Int!
     $type: TransactionType
+    $paymentMethod: [PaymentMethodType]
     $minAmount: Int
     $maxAmount: Int
     $dateFrom: DateTime
@@ -84,6 +89,7 @@ const transactionsPageQuery = gqlV2/* GraphQL */ `
       limit: $limit
       offset: $offset
       type: $type
+      paymentMethod: $paymentMethod
       minAmount: $minAmount
       maxAmount: $maxAmount
       dateFrom: $dateFrom
@@ -120,6 +126,9 @@ const getVariablesFromQuery = query => {
     offset: parseInt(query.offset) || 0,
     limit: parseInt(query.limit) || EXPENSES_PER_PAGE,
     type: query.type,
+    paymentMethod: query.paymentMethod
+      ? parseTransactionPaymentMethods(query.paymentMethod)
+      : getDefaultPaymentMethods(),
     status: query.status,
     tags: query.tag ? [query.tag] : undefined,
     minAmount: amountRange[0] && amountRange[0] * 100,
@@ -311,6 +320,7 @@ class TransactionsPage extends React.Component {
               <TransactionsFilters
                 filters={query}
                 kinds={transactions?.kinds}
+                paymentMethod={transactions?.paymentMethod}
                 collective={collective}
                 onChange={queryParams => this.updateFilters({ ...queryParams, offset: null }, collective)}
               />
