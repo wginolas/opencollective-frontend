@@ -120,6 +120,10 @@ const nextConfig = {
       type: 'javascript/auto',
     });
 
+    // https://github.com/react-dnd/react-dnd/issues/3433
+    config.resolve.alias['react/jsx-runtime.js'] = 'react/jsx-runtime';
+    config.resolve.alias['react/jsx-dev-runtime.js'] = 'react/jsx-dev-runtime';
+
     return config;
   },
   async rewrites() {
