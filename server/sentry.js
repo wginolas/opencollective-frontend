@@ -1,6 +1,4 @@
-// NOTE: This require will be replaced with `@sentry/browser`
-// client side thanks to the webpack config in next.config.js
-const Sentry = require('@sentry/node');
+import * as Sentry from '@sentry/nextjs';
 
 /**
  * Returns the Sentry environment based on env and current server.
@@ -10,13 +8,12 @@ const getSentryEnvironment = () => {
 };
 
 /**
- * Initialize Sentry and export it.
+ * Defines options shared by all Sentry integrations (client and server side)
  */
-Sentry.init({
+export const sharedSentryOptions = {
   dsn: process.env.SENTRY_DSN,
   environment: getSentryEnvironment(),
   attachStacktrace: true,
-  release: process.env.SENTRY_RELEASE,
   enabled: process.env.NODE_ENV !== 'test',
   ignoreErrors: [
     /\[Please ignore this error\]/, // See `IgnorableError`
@@ -31,18 +28,12 @@ Sentry.init({
     /extensions\//i,
     /^chrome:\/\//i,
   ],
-});
-
-// Default scope
-Sentry.configureScope(scope => {
-  scope.setTag('nodejs', process.version);
-  scope.setTag('runtimeEngine', typeof window !== 'undefined' ? 'browser' : 'server');
-});
+};
 
 /**
  * Helper to extract Sentry tags from an error
  */
-const captureException = (err, ctx) => {
+export const captureException = (err, ctx) => {
   Sentry.configureScope(scope => {
     if (err.message) {
       // De-duplication currently doesn't work correctly for SSR / browser errors
@@ -84,4 +75,4 @@ const captureException = (err, ctx) => {
   return Sentry.captureException(err);
 };
 
-module.exports = { Sentry, captureException };
+export { Sentry };

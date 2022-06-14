@@ -81,7 +81,6 @@ export default class IntlDocument extends Document {
       'STRIPE_KEY',
       'SENTRY_DSN',
       'NEW_ADMIN_DASHBOARD',
-      'SENTRY_RELEASE',
       'WEBSITE_URL',
       'GOOGLE_MAPS_API_KEY',
       'RECAPTCHA_SITE_KEY',
