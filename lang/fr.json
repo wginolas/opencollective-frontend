@@ -2452,7 +2452,6 @@
   "UKIPT2": "{amount} owed to {account}",
   "UlTOwN": "Events and Projects inherit the host fees structure configuration of their parents.",
   "uM2WZi": "Receive financial contributions via credit card, automatically updating your budget for transparent tracking. *Stripe fees apply",
-  "Un2XtX": "Keep this field empty to use the default title: Payment receipt.",
   "unarchive.account.confirmation": "Êtes-vous sûr de vouloir désarchiver {type, select, EVENT {cet événement} PROJECT {ce projet} FUND {ce fond} COLLECTIVE {ce collectif} ORGANIZATION {cette organisation} other {ce compte}} ?",
   "unarchive.modal.header": "Désarchiver {name}",
   "unsubscribe.success": "Désinscription réussie !",

@@ -2452,7 +2452,6 @@
   "UKIPT2": "{amount} adeudados a {account}",
   "UlTOwN": "Los Eventos y Proyectos heredan de sus progenitores la configuración estructural de las tarifas de anfitrión.",
   "uM2WZi": "Recibe contribuciones financieras a través de una tarjeta de crédito, actualizando automáticamente tu presupuesto para un seguimiento transparente. *Se aplican tarifas de Stripe",
-  "Un2XtX": "Keep this field empty to use the default title: Payment receipt.",
   "unarchive.account.confirmation": "¿Estás seguro de que quieres desarchivar {type, select, EVENT {este Evento} PROJECT {este Proyecto} FUND {este Fondo} COLLECTIVE {este Colectivo} ORGANIZATION {esta Organización} other {esta cuenta}}?",
   "unarchive.modal.header": "Desarchivar {name}",
   "unsubscribe.success": "¡Has cancelado tu suscripción con éxito!",

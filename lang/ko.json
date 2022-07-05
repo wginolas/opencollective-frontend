@@ -2452,7 +2452,6 @@
   "UKIPT2": "{amount} owed to {account}",
   "UlTOwN": "Events and Projects inherit the host fees structure configuration of their parents.",
   "uM2WZi": "Receive financial contributions via credit card, automatically updating your budget for transparent tracking. *Stripe fees apply",
-  "Un2XtX": "Keep this field empty to use the default title: Payment receipt.",
   "unarchive.account.confirmation": "Are you sure you want to unarchive {type, select, EVENT {this Event} PROJECT {this Project} FUND {this Fund} COLLECTIVE {this Collective} ORGANIZATION {this Organization} other {this account}}?",
   "unarchive.modal.header": "Unarchive {name}",
   "unsubscribe.success": "성공적으로 구독 해제되었습니다!",
