@@ -615,6 +615,7 @@ type Tier {
   amountType: TierAmountType!
   minimumAmount: Amount!
   endsAt: DateTime
+  invoiceTemplate: InvoiceTemplate!
 }
 
 """
@@ -805,6 +806,11 @@ interface Transaction {
   Merchant id related to the Transaction (Stripe, PayPal, Wise, Privacy)
   """
   merchantId: String
+
+  """
+  The balance after the Transaction has run. Only for financially active accounts.
+  """
+  balanceInHostCurrency: Amount
 }
 
 """
@@ -4235,6 +4241,21 @@ enum TierAmountType {
 }
 
 """
+Represents a receipt template.
+"""
+type InvoiceTemplate {
+  """
+  The title of the template.
+  """
+  title: String
+
+  """
+  Information about the particular template.
+  """
+  info: String
+}
+
+"""
 A financial amount.
 """
 type Amount {
@@ -5434,6 +5455,8 @@ type Credit implements Transaction {
   Merchant id related to the Transaction (Stripe, PayPal, Wise, Privacy)
   """
   merchantId: String
+  balanceInHostCurrency: Amount
+  invoiceTemplate: InvoiceTemplate!
 }
 
 """
@@ -5537,6 +5560,8 @@ type Debit implements Transaction {
   Merchant id related to the Transaction (Stripe, PayPal, Wise, Privacy)
   """
   merchantId: String
+  balanceInHostCurrency: Amount
+  invoiceTemplate: InvoiceTemplate!
 }
 
 """
@@ -10897,6 +10922,7 @@ type Mutation {
     amount: AmountInput!
     description: String!
     hostFeePercent: Float
+    invoiceTemplate: InvoiceTemplateInput
   ): Order!
   createCollective(
     """
@@ -11949,6 +11975,21 @@ type Mutation {
   createWebhook(webhook: WebhookCreateInput!): Webhook
   updateWebhook(webhook: WebhookUpdateInput!): Webhook
   deleteWebhook(webhook: WebhookReferenceInput!): Webhook
+}
+
+"""
+Input type for receipt template.
+"""
+input InvoiceTemplateInput {
+  """
+  The title of the template.
+  """
+  title: String
+
+  """
+  Information about the particular template.
+  """
+  info: String
 }
 
 input CollectiveCreateInput {
