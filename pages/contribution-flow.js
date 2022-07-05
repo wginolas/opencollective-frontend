@@ -179,7 +179,7 @@ class NewContributionFlowPage extends React.Component {
           defaultQuantity={this.props.quantity}
           disabledPaymentMethodTypes={this.props.disabledPaymentMethodTypes}
           fixedInterval={this.props.interval}
-          fixedAmount={this.props.totalAmount}
+          amount={this.props.totalAmount}
           platformContribution={this.props.platformContribution}
           customData={this.props.customData}
           skipStepDetails={this.props.skipStepDetails}

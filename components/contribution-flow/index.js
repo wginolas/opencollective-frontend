@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { graphql } from '@apollo/client/react/hoc';
 import { getApplicableTaxes } from '@opencollective/taxes';
 import { CardElement } from '@stripe/react-stripe-js';
-import { find, get, intersection, isEmpty, isNil, omitBy, pick, set } from 'lodash';
+import { find, get, intersection, isEmpty, isEqual, isNil, omit, omitBy, pick, set } from 'lodash';
 import memoizeOne from 'memoize-one';
 import { withRouter } from 'next/router';
 import { defineMessages, FormattedMessage, injectIntl } from 'react-intl';
@@ -15,7 +15,7 @@ import { MODERATION_CATEGORIES_ALIASES } from '../../lib/constants/moderation-ca
 import { PAYMENT_METHOD_SERVICE, PAYMENT_METHOD_TYPE } from '../../lib/constants/payment-methods';
 import { TierTypes } from '../../lib/constants/tiers-types';
 import { TransactionTypes } from '../../lib/constants/transactions';
-import { formatCurrency } from '../../lib/currency-utils';
+import { centsAmountToFloat, floatAmountToCents, formatCurrency } from '../../lib/currency-utils';
 import { formatErrorMessage, getErrorFromGraphqlException } from '../../lib/errors';
 import { isPastEvent } from '../../lib/events';
 import { API_V2_CONTEXT, gqlV2 } from '../../lib/graphql/helpers';
@@ -49,7 +49,8 @@ import SafeTransactionMessage from './SafeTransactionMessage';
 import SignInToContributeAsAnOrganization from './SignInToContributeAsAnOrganization';
 import { validateGuestProfile } from './StepProfileGuestForm';
 import { NEW_ORGANIZATION_KEY } from './StepProfileLoggedInForm';
-import { getGQLV2AmountInput, getTotalAmount, NEW_CREDIT_CARD_KEY } from './utils';
+import { decodeContributionFlowQuery, encodeContributionFlowQuery } from './url-parameters';
+import { getContributionFlowRoute, getGQLV2AmountInput, getTotalAmount, NEW_CREDIT_CARD_KEY } from './utils';
 
 const StepsProgressBox = styled(Box)`
   min-height: 120px;
@@ -111,7 +112,7 @@ class ContributionFlow extends React.Component {
     confirmOrder: PropTypes.func.isRequired,
     disabledPaymentMethodTypes: PropTypes.arrayOf(PropTypes.string),
     fixedInterval: PropTypes.string,
-    fixedAmount: PropTypes.number,
+    amount: PropTypes.number,
     quantity: PropTypes.number,
     platformContribution: PropTypes.number,
     skipStepDetails: PropTypes.bool,
@@ -159,7 +160,7 @@ class ContributionFlow extends React.Component {
       stepDetails: {
         quantity: (Number.isSafeInteger(props.quantity) && props.quantity) || 1,
         interval: props.fixedInterval || getDefaultInterval(props.tier),
-        amount: isCryptoFlow ? '' : props.fixedAmount || getDefaultTierAmount(props.tier, props.collective, currency),
+        amount: isCryptoFlow ? '' : props.amount || getDefaultTierAmount(props.tier, props.collective, currency),
         platformContribution: props.platformContribution,
         currency,
       },
@@ -167,9 +168,26 @@ class ContributionFlow extends React.Component {
   }
 
   componentDidUpdate(oldProps) {
+    // Handle logout
     if (oldProps.LoggedInUser && !this.props.LoggedInUser) {
       this.setState({ stepProfile: null, stepSummary: null, stepPayment: null });
       this.pushStepRoute(STEPS.PROFILE);
+    }
+
+    // Reflect state changes in the URL
+    const currentUrlState = decodeContributionFlowQuery(this.props.router.query);
+    const expectedUrlState = { amount: this.state.stepDetails.amount, interval: this.state.stepDetails.interval };
+    if (!isEqual(currentUrlState, omitBy(expectedUrlState, isNil))) {
+      const route = this.getRoute(this.props.step);
+      const query = this.getEncodedQueryParams();
+      this.props.router.replace(
+        {
+          pathname: route,
+          query: omitBy({ ...query, ...encodeContributionFlowQuery(expectedUrlState) }, isNil),
+        },
+        undefined,
+        { scroll: false },
+      );
     }
   }
 
@@ -481,12 +499,35 @@ class ContributionFlow extends React.Component {
     }
   };
 
-  /** Navigate to another step, ensuring all route params are preserved */
-  pushStepRoute = async (stepName, queryParams = {}) => {
+  /** Returns the route to use for the current contribution flow  */
+  getRoute(step) {
     const { collective, tier, isEmbed } = this.props;
-    const encodeListArg = list => (!list?.length ? undefined : list.join(','));
     const verb = this.props.verb || 'donate';
-    const step = stepName === 'details' ? '' : stepName;
+    if (isEmbed) {
+      if (tier) {
+        return `/embed${getCollectivePageRoute(collective)}/contribute/${tier.slug}-${tier.legacyId}/${step}`;
+      } else {
+        return `/embed${getCollectivePageRoute(collective)}/donate/${step}`;
+      }
+    } else if (tier) {
+      if (tier.type === 'TICKET' && collective.parent) {
+        return `${getCollectivePageRoute(collective)}/order/${tier.legacyId}/${step}`;
+      } else {
+        // Enforce "contribute" verb for ordering tiers
+        return `${getCollectivePageRoute(collective)}/contribute/${tier.slug}-${tier.legacyId}/checkout/${step}`;
+      }
+    } else if (verb === 'contribute' || verb === 'new-contribute') {
+      // Never use `contribute` as verb if not using a tier (would introduce a route conflict)
+      return `${getCollectivePageRoute(collective)}/donate/${step}`;
+    } else if (verb === 'donate' && this.props.paymentFlow === PAYMENT_FLOW.CRYPTO) {
+      return `${getCollectivePageRoute(collective)}/donate/crypto/${step}`;
+    }
+
+    return `${getCollectivePageRoute(collective)}/${verb}/${step}`;
+  }
+
+  getEncodedQueryParams() {
+    const encodeListArg = list => (!list?.length ? undefined : list.join(','));
     const allQueryParams = {
       interval: this.props.fixedInterval,
       disabledPaymentMethodTypes: encodeListArg(this.props.disabledPaymentMethodTypes),
@@ -503,37 +544,21 @@ class ContributionFlow extends React.Component {
         'hideHeader',
         'hideCreditCardPostalCode',
       ]),
-      ...queryParams,
     };
 
-    let route = `${getCollectivePageRoute(collective)}/${verb}/${step}`;
+    return omitBy(allQueryParams, value => !value);
+  }
 
-    if (isEmbed) {
-      if (tier) {
-        route = `/embed${getCollectivePageRoute(collective)}/contribute/${tier.slug}-${tier.legacyId}/${step}`;
-      } else {
-        route = `/embed${getCollectivePageRoute(collective)}/donate/${step}`;
-      }
-    } else if (tier) {
-      if (tier.type === 'TICKET' && collective.parent) {
-        route = `${getCollectivePageRoute(collective)}/order/${tier.legacyId}/${step}`;
-      } else {
-        // Enforce "contribute" verb for ordering tiers
-        route = `${getCollectivePageRoute(collective)}/contribute/${tier.slug}-${tier.legacyId}/checkout/${step}`;
-      }
-    } else if (verb === 'contribute' || verb === 'new-contribute') {
-      // Never use `contribute` as verb if not using a tier (would introduce a route conflict)
-      route = `${getCollectivePageRoute(collective)}/donate/${step}`;
-    } else if (verb === 'donate' && this.props.paymentFlow === PAYMENT_FLOW.CRYPTO) {
-      route = `${getCollectivePageRoute(collective)}/donate/crypto/${step}`;
-    }
-
+  /** Navigate to another step, ensuring all route params are preserved */
+  pushStepRoute = async (stepName, queryParams = {}) => {
     // Reset errors if any
     if (this.state.error) {
       this.setState({ error: null });
     }
 
     // Navigate to the new route
+    const allQueryParams = { ...this.getEncodedQueryParams(), ...queryParams };
+    const route = this.getRoute(stepName === 'details' ? '' : stepName);
     await this.props.router.push({ pathname: route, query: omitBy(allQueryParams, value => !value) });
     this.scrollToTop();
   };
@@ -572,9 +597,9 @@ class ContributionFlow extends React.Component {
 
   /** Returns the steps list */
   getSteps() {
-    const { intl, fixedInterval, fixedAmount, collective, host, tier, LoggedInUser, paymentFlow } = this.props;
+    const { intl, fixedInterval, amount, collective, host, tier, LoggedInUser, paymentFlow } = this.props;
     const { stepDetails, stepProfile, stepPayment, stepSummary } = this.state;
-    const isFixedContribution = this.isFixedContribution(tier, fixedAmount, fixedInterval);
+    const isFixedContribution = this.isFixedContribution(tier, amount, fixedInterval);
     const currency = tier?.amount.currency || collective.currency;
     const minAmount = this.getTierMinAmount(tier, currency);
     const noPaymentRequired = minAmount === 0 && (isFixedContribution || stepDetails?.amount === 0);
