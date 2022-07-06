@@ -83,8 +83,12 @@ class SignInOrJoinFree extends React.Component {
     addToast: PropTypes.func.isRequired,
     hideFooter: PropTypes.bool,
     isOAuth: PropTypes.bool,
-    oAuthAppName: PropTypes.string,
-    oAuthAppImage: PropTypes.string,
+    oAuthApplication: PropTypes.shape({
+      name: PropTypes.string,
+      account: PropTypes.shape({
+        imageUrl: PropTypes.string,
+      }),
+    }),
   };
 
   constructor(props) {
@@ -98,8 +102,8 @@ class SignInOrJoinFree extends React.Component {
       useRecoveryCodes: null,
       emailAlreadyExists: false,
       isOAuth: this.props.isOAuth,
-      oAuthAppName: this.props.oAuthAppName,
-      oAuthAppImage: this.props.oAuthAppImage,
+      oAuthAppName: this.props.oAuthApplication?.name,
+      oAuthAppImage: this.props.oAuthApplication?.account?.imageUrl,
     };
   }
 
@@ -362,8 +366,8 @@ class SignInOrJoinFree extends React.Component {
                   (() =>
                     this.switchForm('create-account', {
                       isOAuth: this.props.isOAuth,
-                      oAuthAppName: this.props.oAuthAppName,
-                      oAuthAppImage: this.props.oAuthAppImage,
+                      oAuthAppName: this.props.oAuthApplication?.name,
+                      oAuthAppImage: this.props.oAuthApplication?.account?.imageUrl,
                     }))
                 }
                 onSubmit={email => this.signIn(email, false)}
@@ -372,8 +376,8 @@ class SignInOrJoinFree extends React.Component {
                 label={this.props.signInLabel}
                 showSecondaryAction={!this.props.disableSignup}
                 isOAuth={this.props.isOAuth}
-                oAuthAppName={this.props.oAuthAppName}
-                oAuthAppImage={this.props.oAuthAppImage}
+                oAuthAppName={this.props.oAuthApplication?.name}
+                oAuthAppImage={this.props.oAuthApplication?.account?.imageUrl}
               />
             ) : (
               <Flex flexDirection="column" width={1} alignItems="center">

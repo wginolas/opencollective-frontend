@@ -59,11 +59,7 @@ const OAuthAuthorizePage = () => {
         {isLoading ? (
           <Loading />
         ) : !LoggedInUser ? (
-          <SignInOrJoinFree
-            isOAuth
-            oAuthAppName={data?.application?.name}
-            oAuthAppImage={data?.application?.account?.imageUrl}
-          />
+          <SignInOrJoinFree isOAuth oAuthApplication={data?.application} />
         ) : missingParams.length ? (
           <MessageBox withIcon type="error">
             <FormattedMessage
