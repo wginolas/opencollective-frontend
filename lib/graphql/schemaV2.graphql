@@ -615,7 +615,7 @@ type Tier {
   amountType: TierAmountType!
   minimumAmount: Amount!
   endsAt: DateTime
-  invoiceTemplate: InvoiceTemplate!
+  invoiceTemplate: String!
 }
 
 """
@@ -4241,21 +4241,6 @@ enum TierAmountType {
 }
 
 """
-Represents a receipt template.
-"""
-type InvoiceTemplate {
-  """
-  The title of the template.
-  """
-  title: String
-
-  """
-  Information about the particular template.
-  """
-  info: String
-}
-
-"""
 A financial amount.
 """
 type Amount {
@@ -5456,7 +5441,7 @@ type Credit implements Transaction {
   """
   merchantId: String
   balanceInHostCurrency: Amount
-  invoiceTemplate: InvoiceTemplate!
+  invoiceTemplate: String!
 }
 
 """
@@ -5561,7 +5546,7 @@ type Debit implements Transaction {
   """
   merchantId: String
   balanceInHostCurrency: Amount
-  invoiceTemplate: InvoiceTemplate!
+  invoiceTemplate: String!
 }
 
 """
@@ -10922,7 +10907,7 @@ type Mutation {
     amount: AmountInput!
     description: String!
     hostFeePercent: Float
-    invoiceTemplate: InvoiceTemplateInput
+    invoiceTemplate: String
   ): Order!
   createCollective(
     """
@@ -11975,21 +11960,6 @@ type Mutation {
   createWebhook(webhook: WebhookCreateInput!): Webhook
   updateWebhook(webhook: WebhookUpdateInput!): Webhook
   deleteWebhook(webhook: WebhookReferenceInput!): Webhook
-}
-
-"""
-Input type for receipt template.
-"""
-input InvoiceTemplateInput {
-  """
-  The title of the template.
-  """
-  title: String
-
-  """
-  Information about the particular template.
-  """
-  info: String
 }
 
 input CollectiveCreateInput {
