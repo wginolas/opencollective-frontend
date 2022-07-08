@@ -26,19 +26,8 @@ export default class Steps extends React.Component {
     onComplete: PropTypes.func.isRequired,
     /** A function that gets passed everything needed to show the current step */
     children: PropTypes.func.isRequired,
-    /**
-     * Called when the current step is normally not reachable.
-     * Default to `goToStep(lastValidStep, {ignoreValidation: true})`
-     */
-    onInvalidStep: PropTypes.func.isRequired,
     /** A list of steps to be skipped */
     skip: PropTypes.arrayOf(PropTypes.string),
-  };
-
-  static defaultProps = {
-    onInvalidStep: ({ lastValidStep, firstStep, goToStep }) => {
-      return goToStep(lastValidStep || firstStep, { ignoreValidation: true });
-    },
   };
 
   state = {
@@ -82,7 +71,8 @@ export default class Steps extends React.Component {
 
   onInvalidStep = (step, lastValidStep) => {
     const firstStep = this.getStepByIndex(0);
-    return this.props.onInvalidStep({ step, lastValidStep, firstStep, goToStep: this.goToStep });
+    const targetStep = lastValidStep ? this.props.steps[lastValidStep.index + 1] : firstStep;
+    return this.goToStep(targetStep, { ignoreValidation: true });
   };
 
   markStepAsVisited = step => {

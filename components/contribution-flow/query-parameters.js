@@ -71,6 +71,8 @@ const ContributionFlowUrlParametersConfig = {
    * @example tag1,tag2
    */
   tags: { type: 'stringArray' },
+  // TODO ADD DOCS
+  hideSteps: { type: 'boolean' },
   // ---- Aliases for legacy compatibility ----
   /**
    * The default amount in cents
